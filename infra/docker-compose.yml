@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:15-alpine
+    restart: unless-stopped
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -12,6 +13,7 @@ services:
 
   backend:
     image: obscure74/foodgram_backend:latest
+    restart: unless-stopped
     env_file: .env
     depends_on:
       db:
@@ -22,11 +24,13 @@ services:
 
   frontend:
     image: obscure74/foodgram_frontend:latest
+    restart: unless-stopped
     volumes:
       - frontend_build:/app/result_build
 
   nginx:
     image: nginx:1.25.4-alpine
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
