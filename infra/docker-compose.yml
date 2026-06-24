@@ -21,10 +21,14 @@ services:
     volumes:
       - static:/app/static
       - media:/app/media
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000"
 
   frontend:
     image: obscure74/foodgram_frontend:latest
-    restart: unless-stopped
+    restart: "no"
     volumes:
       - frontend_build:/app/result_build
 
