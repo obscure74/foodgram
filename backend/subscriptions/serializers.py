@@ -1,11 +1,12 @@
-from rest_framework import serializers
-from .models import Subscription
 from recipes.serializers import RecipeSerializer
+from rest_framework import serializers
+
+from .models import Subscription
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор для подписок."""
-    
+
     class Meta:
         model = Subscription
         fields = ('user', 'author')
@@ -48,14 +49,14 @@ class SubscriptionAuthorSerializer(serializers.Serializer):
     def get_recipes(self, obj):
         request = self.context.get('request')
         recipes_limit = request.query_params.get('recipes_limit')
-        
+
         recipes = obj.recipes.all()
         if recipes_limit:
             try:
                 recipes = recipes[:int(recipes_limit)]
             except (ValueError, TypeError):
                 pass
-        
+
         return RecipeSerializer(
             recipes,
             many=True,

@@ -1,5 +1,11 @@
-from django.db import models
+"""
+Модели приложения recipes.
+
+Описывают структуру данных для рецептов, ингредиентов и тегов.
+"""
+
 from django.core.validators import MinValueValidator
+from django.db import models
 from users.models import User
 
 

@@ -1,10 +1,11 @@
 from rest_framework import serializers
+
 from .models import ShoppingCart
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализатор для списка покупок."""
-    
+
     class Meta:
         model = ShoppingCart
         fields = ('user', 'recipe')

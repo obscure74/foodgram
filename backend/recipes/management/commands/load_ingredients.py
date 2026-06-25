@@ -1,4 +1,5 @@
 import json
+
 from django.core.management.base import BaseCommand
 from recipes.models import Ingredient
 
@@ -15,11 +16,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file_path = options['file_path']
-        
+
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
-            
+
             ingredients_to_create = []
             for item in data:
                 ingredient = Ingredient(
@@ -27,11 +28,12 @@ class Command(BaseCommand):
                     measurement_unit=item['measurement_unit']
                 )
                 ingredients_to_create.append(ingredient)
-            
+
             Ingredient.objects.bulk_create(ingredients_to_create)
             self.stdout.write(
-                self.style.SUCCESS(f'Успешно загружено {len(ingredients_to_create)} ингредиентов')
-            )
+                self.style.SUCCESS(
+                    f'Успешно загружено {
+                        len(ingredients_to_create)} ингредиентов'))
         except FileNotFoundError:
             self.stdout.write(
                 self.style.ERROR(f'Файл {file_path} не найден')

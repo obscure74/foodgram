@@ -1,10 +1,11 @@
 from rest_framework import serializers
+
 from .models import Favorite
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для избранного."""
-    
+
     class Meta:
         model = Favorite
         fields = ('user', 'recipe')

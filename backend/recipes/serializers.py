@@ -1,8 +1,10 @@
 import base64
+
 from django.core.files.base import ContentFile
-from rest_framework import serializers
 from django.core.validators import MinValueValidator
-from .models import Recipe, Tag, Ingredient, RecipeIngredient, RecipeTag
+from rest_framework import serializers
+
+from .models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
 
 
 class Base64ImageField(serializers.ImageField):

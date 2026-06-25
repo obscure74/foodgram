@@ -1,8 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
+from recipes.views import IngredientViewSet, RecipeViewSet, TagViewSet
 from rest_framework.routers import DefaultRouter
-
-from recipes.views import RecipeViewSet, TagViewSet, IngredientViewSet
 from users.views import UserViewSet
 
 router = DefaultRouter()

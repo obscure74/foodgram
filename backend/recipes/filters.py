@@ -1,4 +1,5 @@
 import django_filters
+
 from .models import Recipe, Tag
 
 
@@ -20,7 +21,8 @@ class RecipeFilter(django_filters.FilterSet):
     is_favorited = django_filters.CharFilter(method='filter_is_favorited')
 
     # Фильтрация по наличию в списке покупок
-    is_in_shopping_cart = django_filters.CharFilter(method='filter_is_in_shopping_cart')
+    is_in_shopping_cart = django_filters.CharFilter(
+        method='filter_is_in_shopping_cart')
 
     class Meta:
         model = Recipe
