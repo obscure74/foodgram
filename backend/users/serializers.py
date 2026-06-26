@@ -15,7 +15,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
-            'avatar')
+        )
         read_only_fields = ('id',)
 
 
