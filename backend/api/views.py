@@ -96,13 +96,15 @@ class UserViewSet(viewsets.ModelViewSet):
         """Получение списка авторов, на которых подписан пользователь."""
         subscribed_authors = User.objects.filter(
             subscribers__user=request.user
-        )
+        ).order_by('id')
+
         page = self.paginate_queryset(subscribed_authors)
         if page is not None:
             serializer = SubscriptionSerializer(
                 page, many=True, context={'request': request}
             )
             return self.get_paginated_response(serializer.data)
+
         serializer = SubscriptionSerializer(
             subscribed_authors, many=True, context={'request': request}
         )
@@ -142,11 +144,6 @@ class UserViewSet(viewsets.ModelViewSet):
         """Установка или удаление аватара пользователя."""
         user = request.user
         if request.method == 'PUT':
-            if 'avatar' not in request.data:
-                return Response(
-                    {'avatar': 'Это поле обязательно.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
             serializer = AvatarSerializer(user, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -155,6 +152,8 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             if user.avatar:
                 user.avatar.delete()
+                user.avatar = None
+                user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
