@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
+from users.serializers import CustomUserSerializer
 from .models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
 
 
@@ -53,24 +54,22 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения рецептов."""
-    author = serializers.StringRelatedField(read_only=True)
+    author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     ingredients = RecipeIngredientSerializer(
         many=True,
         read_only=True,
         source='recipe_ingredients'
     )
-    image = Base64ImageField(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = (
-            'id', 'author', 'name', 'text', 'image',
-            'cooking_time', 'tags', 'ingredients',
+            'id', 'tags', 'author', 'ingredients',
             'is_favorited', 'is_in_shopping_cart',
-            'pub_date'
+            'name', 'image', 'text', 'cooking_time'
         )
 
     def get_is_favorited(self, obj):
