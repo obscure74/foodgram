@@ -172,8 +172,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вьюсет для просмотра ингредиентов с кастомным поиском по `name`."""
-
+    """Вьюсет для просмотра ингредиентов с поиском."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
@@ -183,7 +182,11 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Ingredient.objects.all()
         name_param = self.request.query_params.get('name')
         if name_param:
-            queryset = queryset.filter(name__icontains=name_param)
+            start_with = queryset.filter(
+                name__istartswith=name_param
+            )
+            contains = queryset.filter(name__icontains=name_param).exclude(id__in=start_with)
+            return list(start_with) + list(contains)
         return queryset
 
 
@@ -198,7 +201,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ('create', 'update', 'partial_update', 'destroy'):
-            return [IsAuthenticated()]
+            return [IsAuthenticated(), IsAuthorOrReadOnly()]
         return [AllowAny()]
 
     def get_serializer_class(self):
@@ -226,9 +229,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     {"errors": "Рецепт уже в избранном"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            context = {"request": request}
             return Response(
-                RecipeShortSerializer(recipe, context=context).data,
+                RecipeShortSerializer(recipe, context={"request": request}).data,
                 status=status.HTTP_201_CREATED
             )
         elif request.method == "DELETE":

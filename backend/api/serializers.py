@@ -1,5 +1,9 @@
+import re
 import base64
 from django.contrib.auth import get_user_model
+from django.core.exceptions import (
+    ValidationError as DjangoValidationError
+)
 from django.core.files.base import ContentFile
 from django.core.validators import MinValueValidator
 from djoser.serializers import (
@@ -37,6 +41,14 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name', 'password'
         )
         extra_kwargs = {'password': {'write_only': True}}
+
+    def validate_username(self, value):
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError(
+                'Для поля `username` не должны приниматься значения, '
+                'не соответствующие регулярному выражению `^[\w.@+-]+\Z`'
+            )
+        return value
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
@@ -210,13 +222,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_ingredients(self, value):
-        if not value:
+        if not value or len(value) == 0:
             raise serializers.ValidationError(
                 'Поле с ингредиентами не может быть пустым!'
             )
 
         ingredients_list = []
         for item in value:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError('Некорректный формат данных ингредиента.')
+
             ingredient_id = item.get('id')
 
             if not ingredient_id or not Ingredient.objects.filter(id=ingredient_id).exists():
