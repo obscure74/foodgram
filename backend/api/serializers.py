@@ -173,6 +173,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             user=request.user, recipe=obj
         ).exists()
 
+
 class RecipeCreateIngredientSerializer(serializers.Serializer):
     """Вспомогательный сериализатор для создания ингредиентов в рецепте."""
     id = serializers.IntegerField()
@@ -216,17 +217,21 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         ingredients_list = []
         for item in value:
-            # item — это словарь, например {'id': 1, 'amount': 10}
             ingredient_id = item.get('id')
+
+            if not ingredient_id or not Ingredient.objects.filter(id=ingredient_id).exists():
+                raise serializers.ValidationError(
+                    'Указан несуществующий ингредиент!'
+                )
+
             if ingredient_id in ingredients_list:
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться.'
                 )
             ingredients_list.append(ingredient_id)
 
-            # Проверяем количество
             amount = item.get('amount')
-            if int(amount) < 1:
+            if amount is None or int(amount) < 1:
                 raise serializers.ValidationError(
                     'Количество ингредиента должно быть больше 0.'
                 )
@@ -237,13 +242,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         recipe_ingredients = []
         for item in ingredients_data:
             ingredient_id = item.get('id')
-            if not ingredient_id or not Ingredient.objects.filter(
-                id=ingredient_id
-            ).exists():
-                raise serializers.ValidationError(
-                    {'ingredients': 'Указан несуществующий ингредиент!'}
-                )
-
             ingredient = Ingredient.objects.get(id=ingredient_id)
             recipe_ingredients.append(
                 RecipeIngredient(
