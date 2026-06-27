@@ -281,6 +281,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, recipe, validated_data):
+        if 'ingredients' not in self.initial_data:
+            raise serializers.ValidationError(
+                {'ingredients': 'Поле с ингредиентами обязательно для обновления!'}
+            )
+
         ingredients_data = validated_data.pop('ingredients', None)
         tags = validated_data.pop('tags', None)
         for attr, value in validated_data.items():

@@ -212,6 +212,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def update(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        instance = self.get_object()
+        if instance.author != request.user:
+            return Response(
+                {"detail": "Изменять чужой контент запрещено."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)
+
     @action(
         detail=True,
         methods=["post", "delete"],
@@ -219,6 +231,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk=None):
         """Добавление рецепта в избранное или его удаление."""
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == "POST":
             favorite, created = Favorite.objects.get_or_create(
@@ -247,6 +262,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         """Добавление рецепта в список покупок или его удаление."""
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == "POST":
             cart_item, created = ShoppingCart.objects.get_or_create(
