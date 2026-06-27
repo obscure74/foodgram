@@ -34,6 +34,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 
 class CustomUserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
+    avatar = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -45,6 +46,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return False
         return Subscription.objects.filter(user=request.user, author=obj).exists()
+
+
+class AvatarSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField(required=True)  # Обязательное поле!
+
+    class Meta:
+        model = User
+        fields = ('avatar',)
 
 
 class CustomTokenCreateSerializer(BaseTokenCreateSerializer):
@@ -80,7 +89,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
-    class Meta:
+    
+        class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
 
@@ -135,17 +145,31 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('name', 'text', 'image', 'cooking_time', 'ingredients', 'tags')
 
-    def validate_ingredients(self, value):
-        if not value:
-            raise serializers.ValidationError('Рецепт должен содержать хотя бы один ингредиент')
-        ingredient_ids = [item['id'] for item in value]
-        if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError('Ингредиенты не должны повторяться')
-        return value
-
     def validate_tags(self, value):
         if not value:
-            raise serializers.ValidationError('Рецепт должен содержать хотя бы один тег')
+            raise serializers.ValidationError('Должен быть выбран хотя бы один тег.')
+        # Проверка на уникальность тегов в запросе
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError('Теги не должны повторяться.')
+        return value
+
+    def validate_ingredients(self, value):
+        if not value:
+            raise serializers.ValidationError('Должен быть хотя бы один ингредиент.')
+
+        ingredients_list = []
+        for item in value:
+            # item — это словарь, например {'id': 1, 'amount': 10}
+            ingredient_id = item.get('id')
+            if ingredient_id in ingredients_list:
+                raise serializers.ValidationError('Ингредиенты не должны повторяться.')
+            ingredients_list.append(ingredient_id)
+
+            # Проверяем количество
+            amount = item.get('amount')
+            if int(amount) < 1:
+                raise serializers.ValidationError('Количество ингредиента должно быть больше 0.')
+
         return value
 
     def create_ingredients(self, recipe, ingredients_data):
@@ -195,9 +219,12 @@ class SubscriptionSerializer(CustomUserSerializer):
 
     def get_recipes(self, obj):
         request = self.context.get('request')
-        limit = request.query_params.get('recipes_limit')
+    
+        limit = request.query_params.get('recipes_count') if request else None
         recipes = obj.recipes.all()
         if limit:
-            recipes = recipes[:int(limit)]
+            try:
+                recipes = recipes[:int(limit)]
+            except ValueError:
+                pass
         return RecipeShortSerializer(recipes, many=True, context=self.context).data
-    

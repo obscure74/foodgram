@@ -8,12 +8,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api.filters import RecipeFilter
+from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CustomUserSerializer, CustomUserCreateSerializer, IngredientSerializer,
     RecipeCreateSerializer, RecipeSerializer, RecipeShortSerializer,
     SubscriptionSerializer, TagSerializer
 )
+from djoser.serializers import SetPasswordSerializer
 from favorites.models import Favorite
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from shopping_cart.models import ShoppingCart
@@ -25,11 +27,20 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [AllowAny]
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
         if self.action == 'create':
             return CustomUserCreateSerializer
         return CustomUserSerializer
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def set_password(self, request):
+        serializer = SetPasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.request.user.set_password(serializer.validated_data['new_password'])
+        self.request.user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post', 'delete'], permission_classes=[IsAuthenticated])
     def subscribe(self, request, pk=None):
@@ -69,16 +80,20 @@ class UserViewSet(viewsets.ModelViewSet):
             request.user.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['put', 'delete'], permission_classes=[IsAuthenticated], url_path='me/avatar')
+    @action(detail=False, methods=['put', 'delete'], url_path='me/avatar', permission_classes=[IsAuthenticated])
     def avatar(self, request):
+        user = request.user
         if request.method == 'PUT':
-            serializer = CustomUserSerializer(request.user, data=request.data, partial=True, context={'request': request})
+            if 'avatar' not in request.data:
+                return Response({'avatar': 'Это поле обязательно.'}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = AvatarSerializer(user, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response({'avatar': request.user.avatar.url if request.user.avatar else None})
-        elif request.method == 'DELETE':
-            request.user.avatar = None
-            request.user.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        if request.method == 'DELETE':
+            if user.avatar:
+                user.avatar.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -103,6 +118,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
+    pagination_class = CustomPagination
+
+    def get_permissions(self):
+        if self.action in ('create', 'partial_update', 'destroy'):
+            return [IsAuthenticated()]
+        return [AllowAny()]
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
