@@ -36,7 +36,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return CustomUserCreateSerializer
         return CustomUserSerializer
 
-   @action(
+    @action(
         detail=False,
         methods=['post'],
         permission_classes=[IsAuthenticated]
