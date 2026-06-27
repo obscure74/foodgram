@@ -54,8 +54,10 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 class CustomTokenCreateSerializer(BaseTokenCreateSerializer):
     """Кастомный сериализатор для аутентификации по email."""
 
+    class Meta(BaseTokenCreateSerializer.Meta):
+        fields = ('email', 'password')
+
     def validate(self, attrs):
-        # Djoser использует email как LOGIN_FIELD
         email = attrs.get('email')
         password = attrs.get('password')
 
