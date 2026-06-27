@@ -104,7 +104,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 page, many=True, context={'request': request}
             )
             return self.get_paginated_response(serializer.data)
-
+  
         serializer = SubscriptionSerializer(
             subscribed_authors, many=True, context={'request': request}
         )
