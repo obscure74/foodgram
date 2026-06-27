@@ -54,27 +54,28 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 class CustomTokenCreateSerializer(BaseTokenCreateSerializer):
     """Кастомный сериализатор для аутентификации по email."""
 
-    password = serializers.CharField(required=True, write_only=True)
-
-    class Meta:
-        model = User
-        fields = ('email', 'password')
-
     def validate(self, attrs):
+        # Djoser использует email как LOGIN_FIELD
         email = attrs.get('email')
         password = attrs.get('password')
 
         if not email or not password:
-            raise serializers.ValidationError(
-                'Поля email и password обязательны'
-            )
+            raise serializers.ValidationError({
+                'non_field_errors': ['Невозможно войти с предоставленными учетными данными.']
+            })
 
+        # Ищем пользователя по email
         user = User.objects.filter(email=email).first()
 
         if not user or not user.check_password(password):
-            raise serializers.ValidationError(
-                'Невозможно войти с предоставленными учетными данными.'
-            )
+            raise serializers.ValidationError({
+                'non_field_errors': ['Невозможно войти с предоставленными учетными данными.']
+            })
+
+        if not user.is_active:
+            raise serializers.ValidationError({
+                'non_field_errors': ['Пользователь не активен.']
+            })
 
         attrs['user'] = user
         return attrs
