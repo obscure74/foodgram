@@ -48,9 +48,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenCreateSerializer(BaseTokenCreateSerializer):
+    """Кастомный сериализатор для аутентификации по email."""
     password = serializers.CharField(required=True, write_only=True)
 
-    class Meta(BaseTokenCreateSerializer.Meta):
+    class Meta:
+        model = User
         fields = ('email', 'password')
 
     def validate(self, attrs):
