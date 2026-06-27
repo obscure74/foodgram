@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from djoser.serializers import TokenCreateSerializer as BaseTokenCreateSerializer
 
 User = get_user_model()
 
@@ -49,35 +48,3 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
-
-
-class CustomTokenCreateSerializer(BaseTokenCreateSerializer):
-    """Кастомный сериализатор для аутентификации по email."""
-
-    class Meta(BaseTokenCreateSerializer.Meta):
-        fields = ('email', 'password')
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-
-        if not email or not password:
-            raise serializers.ValidationError({
-                'non_field_errors': ['Невозможно войти с предоставленными учетными данными.']
-            })
-
-        # Ищем пользователя по email
-        user = User.objects.filter(email=email).first()
-
-        if not user or not user.check_password(password):
-            raise serializers.ValidationError({
-                'non_field_errors': ['Невозможно войти с предоставленными учетными данными.']
-            })
-
-        if not user.is_active:
-            raise serializers.ValidationError({
-                'non_field_errors': ['Пользователь не активен.']
-            })
-
-        attrs['user'] = user
-        return attrs
