@@ -172,14 +172,19 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вьюсет для просмотра ингредиентов с поиском по названию."""
+    """Вьюсет для просмотра ингредиентов с кастомным поиском по `name`."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
     pagination_class = None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["^name"]
+
+    def get_queryset(self):
+        queryset = Ingredient.objects.all()
+        name_param = self.request.query_params.get('name')
+        if name_param:
+            queryset = queryset.filter(name__icontains=name_param)
+        return queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -192,7 +197,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_permissions(self):
-        if self.action in ('create', 'partial_update', 'destroy'):
+        if self.action in ('create', 'update', 'partial_update', 'destroy'):
             return [IsAuthenticated()]
         return [AllowAny()]
 

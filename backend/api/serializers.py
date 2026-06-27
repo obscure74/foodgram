@@ -211,7 +211,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, value):
         if not value:
             raise serializers.ValidationError(
-                'Должен быть хотя бы один ингредиент.'
+                'Поле с ингредиентами не может быть пустым!'
             )
 
         ingredients_list = []
@@ -234,14 +234,25 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create_ingredients(self, recipe, ingredients_data):
-        RecipeIngredient.objects.bulk_create([
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient_id=d['id'],
-                amount=d['amount']
+        recipe_ingredients = []
+        for item in ingredients_data:
+            ingredient_id = item.get('id')
+            if not ingredient_id or not Ingredient.objects.filter(
+                id=ingredient_id
+            ).exists():
+                raise serializers.ValidationError(
+                    {'ingredients': 'Указан несуществующий ингредиент!'}
+                )
+
+            ingredient = Ingredient.objects.get(id=ingredient_id)
+            recipe_ingredients.append(
+                RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=ingredient,
+                    amount=item.get('amount')
+                )
             )
-            for d in ingredients_data
-        ])
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create_tags(self, recipe, tags):
         RecipeTag.objects.bulk_create([
