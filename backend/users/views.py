@@ -20,6 +20,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated])
+
+    def get_serializer_class(self):
+        """Возвращает правильный сериализатор в зависимости от действия."""
+        if self.action == 'create':
+            from users.serializers import CustomUserCreateSerializer
+            return CustomUserCreateSerializer
+        return CustomUserSerializer
+
     def subscribe(self, request, pk=None):
         """Подписаться/отписаться от автора."""
         author = get_object_or_404(User, pk=pk)
