@@ -104,7 +104,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 page, many=True, context={'request': request}
             )
             return self.get_paginated_response(serializer.data)
-  
+
         serializer = SubscriptionSerializer(
             subscribed_authors, many=True, context={'request': request}
         )
@@ -125,11 +125,14 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         elif request.method == 'PUT':
             serializer = CustomUserSerializer(
-                request.user, data=request.data, context={'request': request}
+                request.user,
+                data=request.data,
+                partial=True,
+                context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         elif request.method == 'DELETE':
             request.user.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -144,7 +147,9 @@ class UserViewSet(viewsets.ModelViewSet):
         """Установка или удаление аватара пользователя."""
         user = request.user
         if request.method == 'PUT':
-            serializer = AvatarSerializer(user, data=request.data)
+            serializer = AvatarSerializer(
+                user, data=request.data, context={'request': request}
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -155,6 +160,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 user.avatar = None
                 user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет для просмотра тегов (только чтение)."""
