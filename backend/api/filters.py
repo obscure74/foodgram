@@ -1,7 +1,17 @@
 import django_filters
-from recipes.models import Recipe, Tag
+from recipes.models import Recipe, Tag, Ingredient
+
+class IngredientFilter(django_filters.FilterSet):
+    """Фильтр для ингредиентов: поиск по параметру 'name' с начала строки."""
+    name = django_filters.CharFilter(field_name='name', lookup_expr='istartswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ['name']
+
 
 class RecipeFilter(django_filters.FilterSet):
+    """Кастомный фильтр для рецептов."""
     tags = django_filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',

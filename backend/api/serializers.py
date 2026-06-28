@@ -37,18 +37,22 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def validate_username(self, value):
-        """Валидация username по regex ^[\w.@+-]+\Z"""
-        if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError(
-                r'Для поля `username` не должны приниматься значения, не соответствующие регулярному выражению ^[\w.@+-]+\Z'
-            )
-        return value
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
+        return user
+
+    def to_representation(self, instance):
+        return {
+            'id': instance.id,
+            'email': instance.email,
+            'username': instance.username,
+            'first_name': instance.first_name,
+            'last_name': instance.last_name,
+        }
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -320,6 +324,5 @@ class SubscriptionSerializer(CustomUserSerializer):
                 recipes = recipes[:int(limit)]
             except ValueError:
                 pass
-        return RecipeShortSerializer(
-            recipes, many=True, context=self.context
-        ).data
+
+        return RecipeShortSerializer(recipes, many=True).data
