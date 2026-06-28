@@ -81,9 +81,14 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
         elif request.method == 'DELETE':
-            subscription = get_object_or_404(
-                Subscription, user=request.user, author=author
-            )
+            subscription = Subscription.objects.filter(
+                user=request.user, author=author
+            ).first()
+            if not subscription:
+                return Response(
+                    {'errors': 'Подписка не найдена'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -177,17 +182,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
     pagination_class = None
-
-    def get_queryset(self):
-        queryset = Ingredient.objects.all()
-        name_param = self.request.query_params.get('name')
-        if name_param:
-            start_with = queryset.filter(
-                name__istartswith=name_param
-            )
-            contains = queryset.filter(name__icontains=name_param).exclude(id__in=start_with)
-            return list(start_with) + list(contains)
-        return queryset
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["^name"]
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -212,18 +208,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def update(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        instance = self.get_object()
-        if instance.author != request.user:
-            return Response(
-                {"detail": "Изменять чужой контент запрещено."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().update(request, *args, **kwargs)
-
     @action(
         detail=True,
         methods=["post", "delete"],
@@ -231,9 +215,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk=None):
         """Добавление рецепта в избранное или его удаление."""
-        if not request.user.is_authenticated:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == "POST":
             favorite, created = Favorite.objects.get_or_create(
@@ -262,9 +243,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         """Добавление рецепта в список покупок или его удаление."""
-        if not request.user.is_authenticated:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == "POST":
             cart_item, created = ShoppingCart.objects.get_or_create(

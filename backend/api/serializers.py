@@ -34,19 +34,16 @@ class Base64ImageField(serializers.ImageField):
 
 
 class CustomUserCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для регистрации нового пользователя."""
     class Meta:
         model = User
-        fields = (
-            'id', 'email', 'username', 'first_name', 'last_name', 'password'
-        )
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_username(self, value):
+        """Валидация username по regex ^[\w.@+-]+\Z"""
         if not re.match(r'^[\w.@+-]+\Z', value):
             raise serializers.ValidationError(
-                'Для поля `username` не должны приниматься значения, '
-                'не соответствующие регулярному выражению `^[\w.@+-]+\Z`'
+                r'Для поля `username` не должны приниматься значения, не соответствующие регулярному выражению ^[\w.@+-]+\Z'
             )
         return value
 
