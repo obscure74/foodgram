@@ -26,25 +26,8 @@ from users.models import User
 
 class UserViewSet(DjoserUserViewSet):
     """Вьюсет для обработки запросов, связанных с пользователями."""
-    
-    pagination_class = CustomPagination
 
-    @action(
-        detail=False,
-        methods=['post'],
-        permission_classes=[IsAuthenticated]
-    )
-    def set_password(self, request):
-        """Смена пароля текущего авторизованного пользователя."""
-        serializer = SetPasswordSerializer(
-            data=request.data, context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        self.request.user.set_password(
-            serializer.validated_data['new_password']
-        )
-        self.request.user.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    pagination_class = CustomPagination
 
     @action(
         detail=True,
@@ -103,24 +86,6 @@ class UserViewSet(DjoserUserViewSet):
             subscribed_authors, many=True, context={'request': request}
         )
         return Response(serializer.data)
-
-    @action(
-        detail=False,
-        methods=['get', 'patch'],
-        permission_classes=[IsAuthenticated]
-    )
-    def me(self, request):
-        if request.method == 'GET':
-            serializer = self.get_serializer(request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        elif request.method == 'PATCH':
-            serializer = self.get_serializer(
-                request.user, data=request.data, partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
