@@ -5,6 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 
 from api.filters import RecipeFilter
@@ -27,7 +28,10 @@ from users.models import User
 class UserViewSet(DjoserUserViewSet):
     """Вьюсет для обработки запросов, связанных с пользователями."""
 
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
     pagination_class = CustomPagination
+    permission_classes = [AllowAny]
 
     @action(
         detail=True,
@@ -73,7 +77,7 @@ class UserViewSet(DjoserUserViewSet):
         """Получение списка авторов, на которых подписан пользователь."""
         subscribed_authors = User.objects.filter(
             subscribers__user=request.user
-        ).distinct().order_by('-id')
+        ).distinct().order_by('id')
 
         page = self.paginate_queryset(subscribed_authors)
         if page is not None:
