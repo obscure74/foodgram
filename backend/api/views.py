@@ -15,6 +15,7 @@ from api.serializers import (
     RecipeCreateSerializer, RecipeSerializer, RecipeShortSerializer,
     SubscriptionSerializer, TagSerializer, AvatarSerializer
 )
+from djoser.views import UserViewSet as DjoserUserViewSet
 from djoser.serializers import SetPasswordSerializer
 from favorites.models import Favorite
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
@@ -23,25 +24,10 @@ from subscriptions.models import Subscription
 from users.models import User
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(DjoserUserViewSet):
     """Вьюсет для обработки запросов, связанных с пользователями."""
-
-    queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
-    permission_classes = [AllowAny]
+    
     pagination_class = CustomPagination
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return CustomUserCreateSerializer
-        return CustomUserSerializer
 
     @action(
         detail=False,
