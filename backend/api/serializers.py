@@ -41,9 +41,15 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             'password': {'write_only': True}
         }
 
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError('Имя пользователя "me" использовать запрещено.')
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError('Некорректные символы в username.')
+        return value
+
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+        return User.objects.create_user(**validated_data)
 
     def to_representation(self, instance):
         return {
