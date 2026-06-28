@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from api.filters import RecipeFilter, IngredientFilter
+from api.filters import RecipeFilter
 from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
@@ -103,7 +103,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def subscriptions(self, request):
         """Получение списка авторов, на которых подписан пользователь."""
         subscribed_authors = User.objects.filter(
-            subscribers__user=request.user
+            subscribers__author=request.user
         ).order_by('id')
 
         page = self.paginate_queryset(subscribed_authors)
@@ -171,13 +171,12 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet для ингредиентов с поддержкой фильтра ?name="""
+    """ViewSet для ингредиентов с поддержкой поиска по началу строки."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
     pagination_class = None
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_class = IngredientFilter
+    filter_backends = [filters.SearchFilter]
     search_fields = ["^name"]
 
 
@@ -192,7 +191,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ('create', 'update', 'partial_update', 'destroy'):
             return [IsAuthenticated(), IsAuthorOrReadOnly()]
-        return [AllowAny()]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action in ('create', 'update', 'partial_update'):
@@ -292,4 +291,5 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_link(self, request, pk=None):
         """Получение короткой ссылки на рецепт."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        return Response({'short-link': f'/recipes/{recipe.id}/'})
+        short_url = request.build_absolute_uri(f'/s/{recipe.id}')
+        return Response({'short-link': short_url}, status=status.HTTP_200_OK)
