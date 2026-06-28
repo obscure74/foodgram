@@ -72,8 +72,8 @@ class UserViewSet(DjoserUserViewSet):
     def subscriptions(self, request):
         """Получение списка авторов, на которых подписан пользователь."""
         subscribed_authors = User.objects.filter(
-            subscribers__author=request.user
-        ).order_by('id')
+            subscribers__user=request.user
+        ).distinct().order_by('-id')
 
         page = self.paginate_queryset(subscribed_authors)
         if page is not None:

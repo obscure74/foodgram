@@ -27,11 +27,31 @@ class RecipeFilter(django_filters.FilterSet):
         fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
 
     def filter_is_favorited(self, queryset, name, value):
-        if value in ['1', 'true', 'True'] and self.request.user.is_authenticated:
-            return queryset.filter(favorites__user=self.request.user)
+        """Фильтр по избранному с учетом анонимов и значения 0."""
+        user = self.request.user
+        if value in ('1', 'true', 'True'):
+            if user.is_authenticated:
+                return queryset.filter(favorites__user=user)
+            return queryset.none()  # У анонима избранного нет, возвращаем пусто
+
+        if value in ('0', 'false', 'False'):
+            if user.is_authenticated:
+                return queryset.exclude(favorites__user=user)
+            return queryset  # У анонима всё "не в избранном", возвращаем всё
+
         return queryset
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
-        if value in ['1', 'true', 'True'] and self.request.user.is_authenticated:
-            return queryset.filter(shopping_cart__user=self.request.user)
+        """Фильтр по корзине с учетом анонимов и значения 0."""
+        user = self.request.user
+        if value in ('1', 'true', 'True'):
+            if user.is_authenticated:
+                return queryset.filter(shopping_cart__user=user)
+            return queryset.none()
+
+        if value in ('0', 'false', 'False'):
+            if user.is_authenticated:
+                return queryset.exclude(shopping_cart__user=user)
+            return queryset
+
         return queryset
