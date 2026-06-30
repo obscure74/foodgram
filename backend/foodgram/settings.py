@@ -107,7 +107,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_PAGINATION_CLASS": "api.pagination.CustomPagination",
     "PAGE_SIZE": 6,
@@ -120,11 +120,11 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "USER_CREATE_PASSWORD_RETYPE": False,
     "SEND_ACTIVATION_EMAIL": False,
+    "TOKEN_MODEL": "rest_framework.authtoken.models.Token",
     "SERIALIZERS": {
         "user_create": "api.serializers.CustomUserCreateSerializer",
         "user": "api.serializers.CustomUserSerializer",
         "current_user": "api.serializers.CustomUserSerializer",
-        #"token_create": "api.serializers.CustomTokenCreateSerializer",
     },
     "PERMISSIONS": {
         "user": ["rest_framework.permissions.AllowAny"],
