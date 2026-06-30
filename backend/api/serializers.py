@@ -94,29 +94,29 @@ class AvatarSerializer(serializers.ModelSerializer):
         fields = ('avatar',)
 
 
-class CustomTokenCreateSerializer(BaseTokenCreateSerializer):
-    """Кастомный сериализатор для аутентификации по email."""
+#class CustomTokenCreateSerializer(BaseTokenCreateSerializer):
+    #"""Кастомный сериализатор для аутентификации по email."""
 
-    password = serializers.CharField(required=True, write_only=True)
+    #password = serializers.CharField(required=True, write_only=True)
 
-    class Meta:
-        model = User
-        fields = ('email', 'password')
+   # class Meta:
+        #model = User
+      #  fields = ('email', 'password')
 
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-        if not email or not password:
-            raise serializers.ValidationError(
-                'Поля email и password обязательны'
-            )
-        user = User.objects.filter(email=email).first()
-        if not user or not user.check_password(password):
-            raise serializers.ValidationError(
-                'Невозможно войти с предоставленными данными.'
-            )
-        attrs['user'] = user
-        return attrs
+    #def validate(self, attrs):
+   #     email = attrs.get('email')
+       # password = attrs.get('password')
+       # if not email or not password:
+       #     raise serializers.ValidationError(
+              #  'Поля email и password обязательны'
+            #)
+        #user = User.objects.filter(email=email).first()
+        #if not user or not user.check_password(password):
+           # raise serializers.ValidationError(
+             #   'Невозможно войти с предоставленными данными.'
+           # )
+      #  attrs['user'] = user
+       # return attrs
 
 
 class TagSerializer(serializers.ModelSerializer):
