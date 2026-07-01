@@ -1,58 +1,57 @@
 import django_filters
-from recipes.models import Recipe, Tag, Ingredient
+from django_filters import rest_framework as filters
+from rest_framework.filters import SearchFilter
+
+from recipes.models import Recipe, Tag
 
 
-class IngredientFilter(django_filters.FilterSet):
-    """Фильтр для ингредиентов: поиск по параметру 'name' с начала строки."""
-    name = django_filters.CharFilter(field_name='name', lookup_expr='istartswith')
+class IngredientSearchFilter(SearchFilter):
+    """Фильтр для поиска ингридентов по имени."""
 
-    class Meta:
-        model = Ingredient
-        fields = ['name']
+    search_param = 'name'
 
 
 class RecipeFilter(django_filters.FilterSet):
-    """Кастомный фильтр для рецептов."""
+    """Фильтр для рецептов по автору."""
+
+    available_tags = Tag.objects.all()
     tags = django_filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
-        queryset=Tag.objects.all(),
-        conjoined=False
-    )
-    author = django_filters.NumberFilter(field_name='author__id')
-    is_favorited = django_filters.CharFilter(method='filter_is_favorited')
-    is_in_shopping_cart = django_filters.CharFilter(method='filter_is_in_shopping_cart')
+        queryset=available_tags)
+
+    author = django_filters.NumberFilter(
+        field_name='author__id')
+
+    is_favorited = filters.BooleanFilter(
+        method='filter_is_favorited')
+
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='filter_is_in_shopping_cart')
 
     class Meta:
+
         model = Recipe
-        fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
+        fields = ['tags', 'author', 'is_in_shopping_cart', 'is_favorited']
 
-    def filter_is_favorited(self, queryset, name, value):
-        """Фильтр по избранному с учетом значения 0 и анонимов."""
+    def filter_is_in_shopping_cart(self, recipes, name, is_in_cart):
+        """Для фильтрации рецептов по пользователю в покупках."""
         user = self.request.user
-        if value in ['1', 'true', 'True']:
-            if user.is_authenticated:
-                return queryset.filter(favorites__user=user)
-            return queryset.none()
+        if not user.is_authenticated:
+            return recipes.none()
+        if is_in_cart:
+            return recipes.filter(
+                shoppingcarts__user=user
+            ).distinct()
+        return recipes
 
-        if value in ['0', 'false', 'False']:
-            if user.is_authenticated:
-                return queryset.exclude(favorites__user=user)
-            return queryset
-
-        return queryset
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        """Фильтр по корзине с учетом значения 0 и анонимов."""
+    def filter_is_favorited(self, recipes, name, is_in_favorited):
+        """Для фильтрации рецептов по пользователю в избранном."""
         user = self.request.user
-        if value in ['1', 'true', 'True']:
-            if user.is_authenticated:
-                return queryset.filter(shopping_cart__user=user)
-            return queryset.none()
-
-        if value in ['0', 'false', 'False']:
-            if user.is_authenticated:
-                return queryset.exclude(shopping_cart__user=user)
-            return queryset
-
-        return queryset
+        if not user.is_authenticated:
+            return recipes.none()
+        if is_in_favorited:
+            return recipes.filter(
+                favorites__user=user
+            ).distinct()
+        return recipes

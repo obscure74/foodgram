@@ -1,0 +1,1014 @@
+openapi: 3.0.3
+info:
+  title: Foodgram API
+  version: 1.0.0
+  description: Документация Foodgram
+paths:
+  /api/auth/token/login/:
+    post:
+      operationId: auth_token_login_create
+      description: Use this endpoint to obtain user authentication token.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenCreate'
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenCreate'
+          description: ''
+  /api/auth/token/logout/:
+    post:
+      operationId: auth_token_logout_create
+      description: Use this endpoint to logout user (remove user authentication token).
+      tags:
+      - auth
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/ingredients/:
+    get:
+      operationId: ingredients_list
+      description: ViewSet для чтения продуктов.
+      parameters:
+      - name: name
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - ingredients
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+          description: ''
+  /api/ingredients/{id}/:
+    get:
+      operationId: ingredients_retrieve
+      description: ViewSet для чтения продуктов.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Продукт.
+        required: true
+      tags:
+      - ingredients
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+          description: ''
+  /api/recipes/:
+    get:
+      operationId: recipes_list
+      description: ViewSet для рецептов.
+      parameters:
+      - in: query
+        name: author
+        schema:
+          type: integer
+      - in: query
+        name: is_favorited
+        schema:
+          type: boolean
+      - in: query
+        name: is_in_shopping_cart
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: tags
+        schema:
+          type: array
+          items:
+            type: string
+        explode: true
+        style: form
+      tags:
+      - recipes
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRecipeReadList'
+          description: ''
+    post:
+      operationId: recipes_create
+      description: ViewSet для рецептов.
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+  /api/recipes/{id}/:
+    get:
+      operationId: recipes_retrieve
+      description: ViewSet для рецептов.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeRead'
+          description: ''
+    patch:
+      operationId: recipes_partial_update
+      description: ViewSet для рецептов.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRecipeWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRecipeWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRecipeWrite'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+    delete:
+      operationId: recipes_destroy
+      description: ViewSet для рецептов.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/recipes/{id}/favorite/:
+    post:
+      operationId: recipes_favorite_create
+      description: Добавление/удаление рецепта из избранного.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+    delete:
+      operationId: recipes_favorite_destroy
+      description: Добавление/удаление рецепта из избранного.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/recipes/{id}/get-link/:
+    get:
+      operationId: recipes_get_link_retrieve
+      description: Получение ссылки на рецепт.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+  /api/recipes/{id}/shopping_cart/:
+    post:
+      operationId: recipes_shopping_cart_create
+      description: Добавление/удаление рецепта из корзины.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecipeWrite'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+    delete:
+      operationId: recipes_shopping_cart_destroy
+      description: Добавление/удаление рецепта из корзины.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Рецепт.
+        required: true
+      tags:
+      - recipes
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/recipes/shopping_cart/download/:
+    get:
+      operationId: recipes_shopping_cart_download_retrieve
+      description: Скачать список покупок.
+      tags:
+      - recipes
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeWrite'
+          description: ''
+  /api/tags/:
+    get:
+      operationId: tags_list
+      description: ViewSet для чтения тэгов.
+      tags:
+      - tags
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/tags/{id}/:
+    get:
+      operationId: tags_retrieve
+      description: ViewSet для чтения тэгов.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Тег.
+        required: true
+      tags:
+      - tags
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/users/:
+    get:
+      operationId: users_list
+      description: ViewSet для кастомной модели User.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - users
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: users_create
+      description: ViewSet для кастомной модели User.
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+  /api/users/{id}/:
+    get:
+      operationId: users_retrieve
+      description: ViewSet для кастомной модели User.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Пользователь.
+        required: true
+      tags:
+      - users
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/{id}/subscribe/:
+    post:
+      operationId: users_subscribe_create
+      description: Подписка / отписка на автора.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Пользователь.
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: users_subscribe_destroy
+      description: Подписка / отписка на автора.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Пользователь.
+        required: true
+      tags:
+      - users
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/me/:
+    get:
+      operationId: users_me_retrieve
+      description: Метод для me/ (GET).
+      tags:
+      - users
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/me/avatar/:
+    put:
+      operationId: users_me_avatar_update
+      description: ViewSet для кастомной модели User.
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Avatar'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Avatar'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Avatar'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+          description: ''
+    delete:
+      operationId: users_me_avatar_destroy
+      description: ViewSet для кастомной модели User.
+      tags:
+      - users
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/users/set_password/:
+    post:
+      operationId: users_set_password_create
+      description: ViewSet для кастомной модели User.
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetPassword'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetPassword'
+          description: ''
+  /api/users/subscriptions/:
+    get:
+      operationId: users_subscriptions_retrieve
+      description: Метод для получения подписок (GET).
+      tags:
+      - users
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionAuthor'
+          description: ''
+components:
+  schemas:
+    Avatar:
+      type: object
+      description: Сериализатор для аватара.
+      properties:
+        avatar:
+          type: string
+          format: uri
+      required:
+      - avatar
+    Ingredient:
+      type: object
+      description: Сериализатор для продуктов.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название продукта
+          maxLength: 128
+        measurement_unit:
+          type: string
+          title: Единица измерения
+          maxLength: 64
+      required:
+      - id
+      - measurement_unit
+      - name
+    PaginatedRecipeReadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeRead'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PatchedRecipeWrite:
+      type: object
+      description: Сериализатор создания и обновления рецептов.
+      properties:
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientWrite'
+        tags:
+          type: array
+          items:
+            type: integer
+        image:
+          type: string
+          format: uri
+        name:
+          type: string
+          title: Название
+          maxLength: 128
+        text:
+          type: string
+          title: Описание
+        cooking_time:
+          type: integer
+          minimum: 1
+    RecipeIngredientRead:
+      type: object
+      description: Сериализатор для получения игредиентов в рецепте (GET).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название продукта
+          readOnly: true
+        measurement_unit:
+          type: string
+          title: Единица измерения
+          readOnly: true
+        amount:
+          type: integer
+          readOnly: true
+          title: Количество
+      required:
+      - amount
+      - id
+      - measurement_unit
+      - name
+    RecipeIngredientWrite:
+      type: object
+      description: Сериализатор для записи игредиентов в рецепт (POST/PATCH).
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+          minimum: 1
+      required:
+      - amount
+      - id
+    RecipeRead:
+      type: object
+      description: Сериализатор для получения рецепта (GET).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          title: Название
+        text:
+          type: string
+          readOnly: true
+          title: Описание
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientRead'
+        author:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          readOnly: true
+          title: Ссылка на картинку на сайте
+        cooking_time:
+          type: integer
+          readOnly: true
+          title: Время приготовления (мин)
+          description: Время в минутах
+        is_favorited:
+          type: boolean
+          readOnly: true
+        is_in_shopping_cart:
+          type: boolean
+          readOnly: true
+      required:
+      - author
+      - cooking_time
+      - id
+      - image
+      - ingredients
+      - is_favorited
+      - is_in_shopping_cart
+      - name
+      - tags
+      - text
+    RecipeWrite:
+      type: object
+      description: Сериализатор создания и обновления рецептов.
+      properties:
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientWrite'
+        tags:
+          type: array
+          items:
+            type: integer
+        image:
+          type: string
+          format: uri
+        name:
+          type: string
+          title: Название
+          maxLength: 128
+        text:
+          type: string
+          title: Описание
+        cooking_time:
+          type: integer
+          minimum: 1
+      required:
+      - cooking_time
+      - image
+      - ingredients
+      - name
+      - tags
+      - text
+    SetPassword:
+      type: object
+      properties:
+        new_password:
+          type: string
+        current_password:
+          type: string
+      required:
+      - current_password
+      - new_password
+    SubscriptionAuthor:
+      type: object
+      description: Сериализатор для подписок.
+      properties:
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Электронная почта
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: Юзернейм
+        first_name:
+          type: string
+          readOnly: true
+          title: Имя
+        last_name:
+          type: string
+          readOnly: true
+          title: Фамилия
+        is_subscribed:
+          type: boolean
+          readOnly: true
+        avatar:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+          title: Ссылка на аватар
+        recipes:
+          type: string
+          readOnly: true
+        recipes_count:
+          type: integer
+          readOnly: true
+      required:
+      - avatar
+      - email
+      - first_name
+      - id
+      - is_subscribed
+      - last_name
+      - recipes
+      - recipes_count
+      - username
+    Tag:
+      type: object
+      description: Сериализатор для тегов.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 32
+        slug:
+          type: string
+          maxLength: 32
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - name
+      - slug
+    TokenCreate:
+      type: object
+      properties:
+        password:
+          type: string
+        email:
+          type: string
+    User:
+      type: object
+      description: Основной сериализатор пользователя.
+      properties:
+        username:
+          type: string
+          readOnly: true
+          title: Юзернейм
+        first_name:
+          type: string
+          readOnly: true
+          title: Имя
+        last_name:
+          type: string
+          readOnly: true
+          title: Фамилия
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Электронная почта
+        is_subscribed:
+          type: boolean
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - id
+      - is_subscribed
+      - last_name
+      - username
+    UserCreate:
+      type: object
+      properties:
+        username:
+          type: string
+          title: Юзернейм
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Электронная почта
+          maxLength: 254
+        id:
+          type: integer
+          readOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - first_name
+      - id
+      - last_name
+      - password
+      - username
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
