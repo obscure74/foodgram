@@ -75,6 +75,22 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             )
         return value
 
+    def validate_first_name(self, value):
+        """Валидация поля first_name"""
+        if not value:
+            raise serializers.ValidationError(
+                'Поле first_name обязательно!'
+            )
+        return value
+
+    def validate_last_name(self, value):
+        """Валидация поля last_name"""
+        if not value:
+            raise serializers.ValidationError(
+                'Поле last_name обязательно!'
+            )
+        return value
+
 
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления или обновления аватара."""
