@@ -5,6 +5,7 @@
 """
 
 from django.core.validators import MinValueValidator
+from django.core.validators import RegexValidator
 from django.db import models
 from users.models import User
 
@@ -15,6 +16,18 @@ class Tag(models.Model):
         'Название',
         unique=True,
         max_length=200
+    )
+    color = models.CharField(
+        'Цвет',
+        max_length=7,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+                message='Цвет должен быть в формате HEX (например, #006400)'
+            )
+        ],
+        default='#006400',
     )
     slug = models.SlugField(
         'Идентификатор',

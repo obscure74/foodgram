@@ -6,6 +6,7 @@ from django.core.exceptions import (
 )
 from django.core.files.base import ContentFile
 from django.core.validators import MinValueValidator
+from djoser.serializers import UserCreateSerializer
 from djoser.serializers import (
     TokenCreateSerializer as BaseTokenCreateSerializer
 )
@@ -33,13 +34,10 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class CustomUserCreateSerializer(serializers.ModelSerializer):
+class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
 
     def validate_username(self, value):
         if value.lower() == 'me':
@@ -124,7 +122,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ('id', 'name', 'slug')
+        fields = ('id', 'name', 'color', 'slug')
 
 
 class IngredientSerializer(serializers.ModelSerializer):

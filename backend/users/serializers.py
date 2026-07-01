@@ -1,14 +1,32 @@
+import base64
 import re
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
+
 from subscriptions.models import Subscription
 
 User = get_user_model()
 
 
+class Base64ImageField(serializers.ImageField):
+    """Кастомное поле для обработки base64 изображений."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(
+                base64.b64decode(imgstr), name=f'temp.{ext}'
+            )
+        return super().to_internal_value(data)
+
+
 class CustomUserSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели пользователя."""
+    """Сериализатор для отображения информации о пользователе."""
     is_subscribed = serializers.SerializerMethodField()
+    avatar = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -32,10 +50,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         ).exists()
 
 
-class CustomUserCreateSerializer(serializers.ModelSerializer):
+class CustomUserCreateSerializer(UserCreateSerializer):
     """Сериализатор для создания пользователя."""
 
-    class Meta:
+    class Meta(UserCreateSerializer.Meta):
         model = User
         fields = (
             'id',
@@ -45,18 +63,23 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             'last_name',
             'password',
         )
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
 
     def validate_username(self, value):
-        """Валидация username по regex ^[\w.@+-]+\Z"""
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя "me" использовать запрещено.'
+            )
         if not re.match(r'^[\w.@+-]+\Z', value):
             raise serializers.ValidationError(
-                'Для поля `username` не должны приниматься значения, не соответствующие регулярному выражению ^[\\w.@+-]+\\Z'
+                'Некорректные символы в username.'
             )
         return value
 
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+
+class AvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления или обновления аватара."""
+    avatar = Base64ImageField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('avatar',)
