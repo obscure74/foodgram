@@ -87,6 +87,10 @@ class Tag(models.Model):
         max_length=SIZE_TAG_FIELDS,
         unique=True,
         verbose_name='Название')
+    color = models.CharField(
+        max_length=7,
+        unique=True,
+        verbose_name='Цвет')
     slug = models.SlugField(
         max_length=SIZE_TAG_FIELDS,
         unique=True,
@@ -134,6 +138,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='recipes',
         verbose_name='Автор')
     name = models.CharField(
         max_length=SIZE_RECIPE_NAME_FIELD,
@@ -153,11 +158,10 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag,
         blank=True,
+        related_name='recipes',
         verbose_name='Теги')
 
     class Meta:
-
-        default_related_name = 'recipes'
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ['-created_at']
@@ -172,18 +176,18 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name='recipe_ingredients',
         verbose_name='Рецепт')
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
+        related_name='recipe_ingredients',
         verbose_name='Продукт')
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(MIN_AMOUNT_VALUE)],
         verbose_name='Количество')
 
     class Meta:
-
-        default_related_name = 'recipe_ingredients'
         verbose_name = 'Количество продукта'
         verbose_name_plural = 'Количество продуктов'
         constraints = [
